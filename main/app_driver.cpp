@@ -16,7 +16,7 @@
 #include <cstdint>
 #include <cmath>
 
-#include <DHT22.h>
+#include "DHT22.h"
 #include <app_priv.h>
 
 using namespace chip::app::Clusters;
@@ -55,12 +55,16 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
                                       uint32_t attribute_id, esp_matter_attr_val_t *val)
 {
 
-    // ESP_LOGI(TAG, "===== Update LED driver attributes ==== \n endpoint ID: %u, Cluster ID: %lu, Attribute ID: %lu \n", endpoint_id, cluster_id, attribute_id);
+    ESP_LOGI(TAG, "===== Update Temp sensor driver attributes ==== \n endpoint ID: %u, Cluster ID: %lu, Attribute ID: %lu \n", endpoint_id, cluster_id, attribute_id);
 
     esp_err_t err = ESP_OK;
     if (endpoint_id == temperature_sensor_endpoint_id)
     {
-        ESP_LOGI(TAG, "===== Inside Update Temperature function ==== \n");
+        ESP_LOGI(TAG, "===== Inside Update Temperature function #2 ==== \n");
+
+        ESP_LOGI(TAG, "===== Read and set Temperature value ==== \n");
+        err = app_driver_read_temperature(endpoint_id);
+
         // led_driver_handle_t handle = (led_driver_handle_t)driver_handle;
         // if (cluster_id == OnOff::Id)
         // {
@@ -105,12 +109,12 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
 
 int16_t app_driver_read_temperature(uint16_t endpoint_id)
 {
-    return getTemperature();
+    return (u_int16_t)getTemperature();
 }
 
 uint16_t app_driver_read_humidity(uint16_t endpoint_id)
 {
-    return getHumidity();
+    return (u_int16_t)getHumidity();
 }
 
 /**

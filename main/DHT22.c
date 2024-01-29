@@ -35,12 +35,10 @@ static const char *TAG = "DHT";
 int DHTgpio = DHT_GPIO; // 4; // my default DHT pin = 4
 float humidity = 0.;
 float temperature = 0.;
-∏
 
-	// == set the DHT used pin=========================================
+// == set the DHT used pin=========================================
 
-	void
-	setDHTgpio(int gpio)
+void setDHTgpio(int gpio)
 {
 	DHTgpio = gpio;
 }
