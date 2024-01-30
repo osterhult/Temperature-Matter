@@ -61,6 +61,7 @@ static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
         {                                      \
             PORT_ENTER_CRITICAL();             \
             ESP_LOGE(TAG, msg, ##__VA_ARGS__); \
+            PORT_EXIT_CRITICAL();              \
             return __;                         \
         }                                      \
     } while (0)
@@ -168,46 +169,55 @@ static inline int16_t dht_convert_data(dht_sensor_type_t sensor_type, uint8_t ms
 esp_err_t dht_read_data(dht_sensor_type_t sensor_type, gpio_num_t pin,
                         int16_t *humidity, int16_t *temperature)
 {
+    printf("==== dht_read_data #1 ====\n");
     CHECK_ARG(humidity || temperature);
 
     uint8_t data[DHT_DATA_BYTES] = {0};
 
+    printf("==== dht_read_data #2 ====\n");
     gpio_set_direction(pin, GPIO_MODE_OUTPUT_OD);
+
+    printf("==== dht_read_data #3 ====\n");
     gpio_set_level(pin, 1);
 
+    printf("==== dht_read_data #4 ====\n");
     PORT_ENTER_CRITICAL();
 
-    printf("==== DEBUG #1 ====\n");
+    // Når inte hit... smäller ovanför
+    printf("==== dht_read_data #5 ====\n");
 
     esp_err_t result = dht_fetch_data(sensor_type, pin, data);
+    printf("==== dht_read_data #6 ====\n");
+
     if (result == ESP_OK)
     {
-        printf("==== DEBUG #2 ====\n");
+        printf("==== dht_read_data #7 ====\n");
         PORT_EXIT_CRITICAL();
     }
 
     /* restore GPIO direction because, after calling dht_fetch_data(), the
      * GPIO direction mode changes */
     gpio_set_direction(pin, GPIO_MODE_OUTPUT_OD);
-    gpio_set_level(pin, 1);
+    printf("==== dht_read_data #8 ====\n");
 
-    printf("==== DEBUG #3 ====\n");
+    gpio_set_level(pin, 1);
+    printf("==== dht_read_data #9 ====\n");
 
     if (result != ESP_OK)
     {
-        printf("==== DEBUG #4 ====\n");
+        printf("==== dht_read_data #10 ====\n");
         return result;
     }
 
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF))
     {
         ESP_LOGE(TAG, "Checksum failed, invalid data received from sensor");
-        printf("==== DEBUG #5 ====\n");
+        printf("==== dht_read_data #11 ====\n");
 
         return ESP_ERR_INVALID_CRC;
     }
 
-    printf("==== DEBUG #6 ====\n");
+    printf("==== dht_read_data #12 ====\n");
 
     if (humidity)
         *humidity = dht_convert_data(sensor_type, data[0], data[1]);
@@ -215,7 +225,7 @@ esp_err_t dht_read_data(dht_sensor_type_t sensor_type, gpio_num_t pin,
     if (temperature)
         *temperature = dht_convert_data(sensor_type, data[2], data[3]);
 
-    printf("==== DEBUG #7 ====\n");
+    printf("==== dht_read_data #13 ====\n");
 
     ESP_LOGD(TAG, "Sensor data: humidity=%d, temp=%d", *humidity, *temperature);
 
@@ -225,18 +235,26 @@ esp_err_t dht_read_data(dht_sensor_type_t sensor_type, gpio_num_t pin,
 esp_err_t dht_read_float_data(dht_sensor_type_t sensor_type, gpio_num_t pin,
                               float *humidity, float *temperature)
 {
+    printf("==== dht_read_float_data #1 ====\n");
     CHECK_ARG(humidity || temperature);
 
     int16_t i_humidity, i_temp;
 
+    printf("==== dht_read_float_data #2 ====\n");
     esp_err_t res = dht_read_data(sensor_type, pin, humidity ? &i_humidity : NULL, temperature ? &i_temp : NULL);
+
+    printf("==== dht_read_float_data #3 ====\n");
     if (res != ESP_OK)
+    {
+        printf("==== dht_read_float_data #4 ====\n");
         return res;
+    }
 
     if (humidity)
         *humidity = i_humidity / 10.0;
     if (temperature)
         *temperature = i_temp / 10.0;
 
+    printf("==== dht_read_float_data #5 ====\n");
     return ESP_OK;
 }
