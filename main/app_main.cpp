@@ -197,7 +197,7 @@ extern "C" void app_main()
 
     /* Initialize driver */
     app_driver_handle_t temperature_sensor_handle = app_driver_DHT_sensor_init();
-    app_driver_handle_t humidity_sensor_handle = app_driver_DHT_sensor_init();
+    // app_driver_handle_t humidity_sensor_handle = app_driver_DHT_sensor_init();
     app_driver_handle_t button_handle = app_driver_button_init();
     app_reset_button_register(button_handle);
 
@@ -243,7 +243,8 @@ extern "C" void app_main()
         // Create endpoint with humidity measurement
         humidity_sensor::config_t humidity_sensor_config;
         humidity_sensor_config.relative_humidity_measurement.measured_value = DEFAULT_HUMIDITY_VALUE;
-        endpoint_t *humidity_sensor_endpoint = humidity_sensor::create(node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, humidity_sensor_handle);
+        endpoint_t *humidity_sensor_endpoint = humidity_sensor::create(node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, NULL);
+        // endpoint_t *humidity_sensor_endpoint = humidity_sensor::create(node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, humidity_sensor_handle);
 
         if (humidity_sensor_endpoint)
         {

@@ -2,8 +2,8 @@
 #include <driver/gpio.h>
 #include <esp_err.h>
 
-#ifndef __DHTX_H__
-#define __DHTX_H__
+#ifndef __DHT22X_H__
+#define __DHT22X_H__
 
 // /**
 //  * Sensor type
@@ -31,7 +31,7 @@
  */
 // void DHT22_task_start(void);
 
-void DHTX_task_start(void);
+void DHT22_task_start(void);
 
 // == function prototypes =======================================
 
@@ -71,4 +71,4 @@ esp_err_t dht_read_data();
  */
 esp_err_t dht_read_float_data();
 
-#endif // __DHTX_H__
+#endif // __DHT22X_H__

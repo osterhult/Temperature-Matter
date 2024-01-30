@@ -12,7 +12,7 @@
 #include "esp_system.h"
 #include "driver/gpio.h"
 
-#include "DHTX.h"
+#include "DHT22X.h"
 
 // DHT timer precision in microseconds
 #define DHT_TIMER_INTERVAL 2
@@ -74,15 +74,6 @@ void errorHandler(int response)
         printf("Unknown error\n");
     }
 }
-
-/*-------------------------------------------------------------------------------
-;
-;	get next state
-;
-;	I don't like this logic. It needs some interrupt blocking / priority
-;	to ensure it runs in realtime.
-;
-;--------------------------------------------------------------------------------*/
 
 /**
  * Get the signal level
@@ -367,13 +358,13 @@ static void DHT22_task(void *pvParameter)
         printf("Hum %.1f\n", getHumidity());
         printf("Tmp %.1f\n", getTemperature());
 
-        // Wait at least 2 seconds before reading again
-        // The interval of the whole process must be more than 2 seconds
+        // Wait at least 30 seconds before reading again
+        // The interval of the whole process must be more than 30 seconds
         vTaskDelay(30000 / portTICK_PERIOD_MS);
     }
 }
 
-void DHTX_task_start(void)
+void DHT22_task_start(void)
 {
     xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
 }

@@ -22,9 +22,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include <DHTX.h>
-// #include <DHT22.h>
-// #include <DHT.h>
+#include <DHT22X.h>
 
 using namespace chip::app::Clusters;
 using namespace esp_matter;
@@ -124,48 +122,13 @@ uint16_t app_driver_read_humidity(uint16_t endpoint_id)
     return (u_int16_t)getHumidity();
 }
 
-////////////////////
-
-// void dht_get_data(void *pvParameters)
-// {
-//     float temperature, humidity;
-
-//     printf("==== dht_get_data #1 ====\n");
-
-//     while (1)
-//     {
-//         printf("==== dht_get_data #2 ====\n");
-
-//         if (dht_read_float_data(&humidity, &temperature) == ESP_OK)
-//             printf("Humidity: %.1f%% Temp: %.1fC\n", humidity, temperature);
-//         else
-//             printf("Could not read data from sensor\n");
-
-//         printf("==== dht_get_data #3 ====\n");
-
-//         // If you read the sensor data too often, it will heat up
-//         // http://www.kandrsmith.org/RJS/Misc/Hygrometers/dht_sht_how_fast.html
-//         vTaskDelay(pdMS_TO_TICKS(30000));
-//     }
-// }
-
-// void DHT_task_start(void)
-// {
-//     printf("==== DHT_task_start #1 ====\n");
-
-//     xTaskCreate(dht_get_data, "dht_get_data", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
-// }
-
-/////////////////////
-
 /**
  * Initialize DHT22 sensor
  */
 app_driver_handle_t app_driver_DHT_sensor_init()
 {
     // Start DHT22 sensor task
-    // DHT22_task_start();
-    DHTX_task_start();
+    DHT22_task_start();
 
     // gpio_config_t io_conf = {
     //     .pin_bit_mask = (1ULL << DHT22_GPIO_PIN),
