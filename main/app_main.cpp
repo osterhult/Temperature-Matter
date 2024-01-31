@@ -61,35 +61,6 @@ static const char *s_decryption_key = decryption_key_start;
 static const uint16_t s_decryption_key_len = decryption_key_end - decryption_key_start;
 #endif // CONFIG_ENABLE_ENCRYPTED_OTA
 
-// // Timer handle
-// TimerHandle_t sensor_timer;
-
-// // Timer callback function
-// void sensor_timer_callback(TimerHandle_t xTimer)
-// {
-//     printf(" ========  sensor_timer_callback  ======== \n");
-
-//     // Read temperature and humidity values from the sensor
-//     int16_t temperature = app_driver_read_temperature(temperature_sensor_endpoint_id);
-//     uint16_t humidity = app_driver_read_humidity(humidity_sensor_endpoint_id);
-
-//     // Update temperature attribute
-//     esp_matter_attr_val_t temperature_value;
-//     temperature_value = esp_matter_invalid(NULL);
-//     temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
-//     temperature_value.val.i16 = temperature;
-//     esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
-
-//     // Update humidity attribute
-//     esp_matter_attr_val_t humidity_value;
-//     humidity_value = esp_matter_invalid(NULL);
-//     humidity_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
-//     humidity_value.val.u16 = humidity;
-//     esp_matter::attribute::update(humidity_sensor_endpoint_id, RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidity_value);
-
-//     ESP_LOGI(TAG, "Temperature: %d, Humidity: %u", temperature, humidity);
-// }
-
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 {
     switch (event->Type)
@@ -182,10 +153,6 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type, uint16
 
     if (type == POST_UPDATE) // or READ?
     {
-        printf(" ========  app_attribute_update_cb = POST_UPDATE ======== \n");
-
-        app_driver_handle_t driver_handle = (app_driver_handle_t)priv_data;
-        err = app_driver_attribute_update(driver_handle, endpoint_id, cluster_id, attribute_id, val);
     }
 
     return err;
@@ -231,11 +198,6 @@ extern "C" void app_main()
             // // Register temperature attribute callback
             esp_matter::attribute::set_callback(temperature_attribute_update_cb);
             // esp_matter::attribute::register_update_callback(temperature_sensor_endpoint_id, chip::app::Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Id, temperature_attribute_update_cb, nullptr);
-
-            // esp_matter_attr_val_t temperature_value;
-            // temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
-            // printf(" ========  Temperature value: %d\n", temperature_value.val.i16);
-            // esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
         }
 
         //////////////
@@ -249,7 +211,6 @@ extern "C" void app_main()
         humidity_sensor::config_t humidity_sensor_config;
         humidity_sensor_config.relative_humidity_measurement.measured_value = DEFAULT_HUMIDITY_VALUE;
         endpoint_t *humidity_sensor_endpoint = humidity_sensor::create(node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, NULL);
-        // endpoint_t *humidity_sensor_endpoint = humidity_sensor::create(node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, humidity_sensor_handle);
 
         if (humidity_sensor_endpoint)
         {
@@ -262,19 +223,10 @@ extern "C" void app_main()
             esp_matter::attribute::set_callback(humidity_attribute_update_cb);
         }
 
-        ////
-
         /* These node and endpoint handles can be used to create/add other endpoints and clusters. */
         if (!node || !temperature_sensor_endpoint || !humidity_sensor_endpoint)
         {
             ESP_LOGE(TAG, "Matter node creation failed");
-        }
-        else
-        {
-            // // Create and start the sensor timer
-            // printf(" ========  Create and start the sensor timer  ======== \n");
-            // sensor_timer = xTimerCreate("sensor_timer", pdMS_TO_TICKS(10000), pdTRUE, NULL, sensor_timer_callback);
-            // xTimerStart(sensor_timer, 0);
         }
     }
 
@@ -294,13 +246,6 @@ extern "C" void app_main()
     {
         ESP_LOGE(TAG, "Matter start failed: %d", err);
     }
-
-    // // Create and start the timer
-    // sensor_timer = xTimerCreate("SensorTimer", pdMS_TO_TICKS(180000), pdTRUE, NULL, sensor_timer_callback);
-    // if (sensor_timer)
-    // {
-    //     xTimerStart(sensor_timer, 0);
-    // }
 
 #if CONFIG_ENABLE_ENCRYPTED_OTA
     err = esp_matter_ota_requestor_encrypted_init(s_decryption_key, s_decryption_key_len);

@@ -33,106 +33,35 @@ static const char *TAG = "app_driver";
 extern uint16_t temperature_sensor_endpoint_id;
 extern uint16_t humidity_sensor_endpoint_id;
 
+/**
+ * Update Matter values with temperature and humidity
+ */
 void updateMatterWithValues()
 {
+    // Update temperature values
     esp_matter_attr_val_t temperature_value;
     temperature_value = esp_matter_invalid(NULL);
     temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
     temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
     esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
 
-    printf("===== Button toggle - Read Temperature value: %d ==== \n", temperature_value.val.i16);
-
+    // Update humidity values
     esp_matter_attr_val_t humidity_value;
     humidity_value = esp_matter_invalid(NULL);
     humidity_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
     humidity_value.val.u16 = app_driver_read_humidity(humidity_sensor_endpoint_id);
     esp_matter::attribute::update(humidity_sensor_endpoint_id, RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidity_value);
-
-    printf("===== Button toggle - Read Humidity value: %d ==== \n", humidity_value.val.u16);
 }
 
 /**
  * Functions to handle a button to toggle the light
  */
-
 static void app_driver_button_toggle_cb(void *arg, void *data)
 {
-    // TODO: Change this to measure temperature and humidity when button is pressed
 
     ESP_LOGI(TAG, "Toggle button pressed");
 
     updateMatterWithValues();
-
-    // esp_matter_attr_val_t temperature_value;
-    // temperature_value = esp_matter_invalid(NULL);
-    // temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
-    // temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
-    // esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
-
-    // printf("===== Button toggle - Read Temperature value: %d ==== \n", temperature_value.val.i16);
-
-    // esp_matter_attr_val_t humidity_value;
-    // humidity_value = esp_matter_invalid(NULL);
-    // humidity_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
-    // humidity_value.val.u16 = app_driver_read_humidity(humidity_sensor_endpoint_id);
-    // esp_matter::attribute::update(humidity_sensor_endpoint_id, RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidity_value);
-
-    // printf("===== Button toggle - Read Humidity value: %d ==== \n", humidity_value.val.u16);
-}
-
-/**
- * Update driver atttributes
- */
-esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_t endpoint_id, uint32_t cluster_id,
-                                      uint32_t attribute_id, esp_matter_attr_val_t *val)
-{
-
-    ESP_LOGI(TAG, "===== Update Temp sensor driver attributes ==== \n endpoint ID: %u, Cluster ID: %lu, Attribute ID: %lu \n", endpoint_id, cluster_id, attribute_id);
-    printf("===== Update Temp sensor driver attributes ==== \n endpoint ID: %u, Cluster ID: %lu, Attribute ID: %lu \n", endpoint_id, cluster_id, attribute_id);
-
-    esp_err_t err = ESP_OK;
-    if (endpoint_id == temperature_sensor_endpoint_id)
-    {
-        ESP_LOGI(TAG, "===== Inside Update Temperature function #2 ==== \n");
-
-        ESP_LOGI(TAG, "===== Read and set Temperature value ==== \n");
-        err = app_driver_read_temperature(endpoint_id);
-
-        node_t *node = node::get();
-        endpoint_t *endpoint = endpoint::get(node, endpoint_id);
-        cluster_t *cluster = cluster::get(endpoint, cluster_id);
-        attribute_t *attribute = attribute::get(cluster, attribute_id);
-
-        esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-        attribute::get_val(attribute, &val);
-        val.val.b = !val.val.b;
-        attribute::update(endpoint_id, cluster_id, attribute_id, &val);
-    }
-    else if (endpoint_id == humidity_sensor_endpoint_id)
-    {
-        ESP_LOGI(TAG, "===== Inside Update Humidity function #2 ==== \n");
-
-        ESP_LOGI(TAG, "===== Read and set Humidity value ==== \n");
-        err = app_driver_read_humidity(endpoint_id);
-
-        node_t *node = node::get();
-        endpoint_t *endpoint = endpoint::get(node, endpoint_id);
-        cluster_t *cluster = cluster::get(endpoint, cluster_id);
-        attribute_t *attribute = attribute::get(cluster, attribute_id);
-
-        esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-        attribute::get_val(attribute, &val);
-        val.val.b = !val.val.b;
-        attribute::update(endpoint_id, cluster_id, attribute_id, &val);
-    }
-    else
-    {
-        ESP_LOGI(TAG, "===== Inside Update function #3 ==== \n");
-        err = ESP_ERR_NOT_SUPPORTED;
-    }
-
-    return err;
 }
 
 int16_t app_driver_read_temperature(uint16_t endpoint_id)
@@ -199,14 +128,9 @@ static void DHT22_task(void *pvParameter)
 
         // Wait at least 30 seconds before reading again
         // The interval of the whole process must be more than 30 seconds
-        vTaskDelay(30000 / portTICK_PERIOD_MS);
+        vTaskDelay(DEFAULT_MEASURE_INTERVAL / portTICK_PERIOD_MS);
     }
 }
-
-// void DHT22_task_start(void)
-// {
-//     xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
-// }
 
 /**
  * Initialize DHT22 sensor
@@ -214,7 +138,6 @@ static void DHT22_task(void *pvParameter)
 app_driver_handle_t app_driver_DHT_sensor_init()
 {
     // Start DHT22 sensor task
-    // DHT22_task_start();
     xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
 
     // Return a placeholder value (you may need to adapt the return type)
