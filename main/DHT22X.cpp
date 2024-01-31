@@ -315,28 +315,22 @@ esp_err_t dht_read_data()
     humidity = dht_convert_data(data[0], data[1]) / 10;
     temperature = dht_convert_data(data[2], data[3]) / 10;
 
-    ESP_LOGD(TAG, "Sensor data: humidity=%f, temp=%f", humidity, temperature);
+    ESP_LOGI(TAG, "Sensor data: humidity=%f, temp=%f", humidity, temperature);
 
     return ESP_OK;
 }
 
 esp_err_t dht_read_float_data()
 {
-    // printf("==== dht_read_float_data #1 ====\n");
-
     int16_t i_humidity, i_temp;
 
-    // printf("==== dht_read_float_data #2 ====\n");
     esp_err_t res = dht_read_data();
 
-    // printf("==== dht_read_float_data #3 ====\n");
     if (res != ESP_OK)
     {
-        // printf("==== dht_read_float_data #4 ====\n");
         return res;
     }
 
-    // printf("==== dht_read_float_data #5 ====\n");
     return ESP_OK;
 }
 

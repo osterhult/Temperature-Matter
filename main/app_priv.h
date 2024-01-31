@@ -1,10 +1,3 @@
-/*
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 
 #pragma once
 
@@ -15,38 +8,10 @@
 #include "esp_openthread_types.h"
 #endif
 
-/** Standard max values (used for remapping attributes) */
-// #define STANDARD_BRIGHTNESS 100
-// #define STANDARD_HUE 360
-// #define STANDARD_SATURATION 100
-// #define STANDARD_TEMPERATURE_FACTOR 1000000
-
-/** Matter max values (used for remapping attributes) */
-// #define MATTER_BRIGHTNESS 254
-// #define MATTER_HUE 254
-// #define MATTER_SATURATION 254
-// #define MATTER_TEMPERATURE_FACTOR 1000000
-
-/** Default attribute values used during initialization */
-// #define DEFAULT_POWER true
-// #define DEFAULT_BRIGHTNESS 64
-// #define DEFAULT_HUE 128
-// #define DEFAULT_SATURATION 254
-
-// // Defining the GPIO pins for leds
-// // #define LED_GPIO_PIN GPIO_NUM_2 // Single LED
-// #define RGB_LED_RED_PIN GPIO_NUM_5   // GPIO pin connected to the red color of the RGB LED
-// #define RGB_LED_GREEN_PIN GPIO_NUM_4 // GPIO pin connected to the green color of the RGB LED
-// #define RGB_LED_BLUE_PIN GPIO_NUM_2  // GPIO pin connected to the blue color of the RGB LED
-
-// // Definition of color temperatures
-// #define MIN_COLOR_TEMPERATURE 1000.0f
-// #define MAX_COLOR_TEMPERATURE 40000.0f
-
 // DHT22 Values
 #define DHT22_GPIO_PIN GPIO_NUM_3
-#define DEFAULT_TEMPERATURE_VALUE 20
-#define DEFAULT_HUMIDITY_VALUE 40
+#define DEFAULT_TEMPERATURE_VALUE 1
+#define DEFAULT_HUMIDITY_VALUE 1
 
 typedef void *app_driver_handle_t;
 

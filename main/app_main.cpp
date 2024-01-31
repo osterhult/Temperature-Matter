@@ -23,6 +23,23 @@
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/Server.h>
 
+#include <esp_err.h>
+#include <esp_log.h>
+#include <nvs_flash.h>
+
+#include <esp_matter.h>
+#include <esp_matter_console.h>
+#include <esp_matter_ota.h>
+
+#include <app_priv.h>
+#include <app_reset.h>
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+#include <platform/ESP32/OpenthreadLauncher.h>
+#endif
+
+#include <app/server/CommissioningWindowManager.h>
+#include <app/server/Server.h>
+
 static const char *TAG = "app_main";
 uint16_t temperature_sensor_endpoint_id = 0;
 uint16_t humidity_sensor_endpoint_id = 0;
@@ -32,7 +49,7 @@ using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
 
-namespace sTempMeasurement = esp_matter::cluster::temperature_measurement;
+// namespace sTempMeasurement = esp_matter::cluster::temperature_measurement;
 
 constexpr auto k_timeout_seconds = 300;
 
@@ -44,51 +61,59 @@ static const char *s_decryption_key = decryption_key_start;
 static const uint16_t s_decryption_key_len = decryption_key_end - decryption_key_start;
 #endif // CONFIG_ENABLE_ENCRYPTED_OTA
 
-// // Timer handle
-// TimerHandle_t sensor_timer;
+// Timer handle
+TimerHandle_t sensor_timer;
 
-// // Timer callback function
-// void sensor_timer_callback(TimerHandle_t xTimer)
-// {
-//     // Read temperature and humidity values from the sensor
-//     int16_t temperature = app_driver_read_temperature(temperature_sensor_endpoint_id);
-//     uint16_t humidity = app_driver_read_humidity(humidity_sensor_endpoint_id);
+// Timer callback function
+void sensor_timer_callback(TimerHandle_t xTimer)
+{
+    printf(" ========  sensor_timer_callback  ======== \n");
 
-//     // Update temperature attribute
+    // Read temperature and humidity values from the sensor
+    int16_t temperature = app_driver_read_temperature(temperature_sensor_endpoint_id);
+    uint16_t humidity = app_driver_read_humidity(humidity_sensor_endpoint_id);
 
-//     esp_matter_attr_val_t temperature_value;
-//     temperature_value.val.i16 = temperature;
-//     esp_matter::attribute::update(temperature_sensor_endpoint_id, sTempMeasurement::attribute esp_matter::cluster::temperature_measurement::attribute:: ::Attributes::Id, &temperature_value);
+    // Update temperature attribute
+    esp_matter_attr_val_t temperature_value;
+    temperature_value.val.i16 = temperature;
+    esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
 
-//     // Update humidity attribute
-//     esp_matter_attr_val_t humidity_value;
-//     humidity_value.val.u16 = humidity;
-//     esp_matter::attribute::update(humidity_sensor_endpoint_id, sTemperatureDelegate::Attributes::MeasuredValue::Id, &humidity_value);
+    // // Update humidity attribute
+    // esp_matter_attr_val_t humidity_value;
+    // humidity_value.val.u16 = humidity;
+    // esp_matter::attribute::update(humidity_sensor_endpoint_id, sTemperatureDelegate::Attributes::MeasuredValue::Id, &humidity_value);
 
-//     ESP_LOGI(TAG, "Temperature: %d, Humidity: %u", temperature, humidity);
-// }
+    ESP_LOGI(TAG, "Temperature: %d, Humidity: %u", temperature, humidity);
+}
 
-// // Example callback for temperature attribute change
-// esp_err_t temperature_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
-// {
-//     if (type == POST_UPDATE)
-//     {
-//         ESP_LOGI(TAG, "Temperature attribute updated to %d", val->i16);
-//         // Add your logic here to use or display the temperature value
-//     }
-//     return ESP_OK;
-// }
+// Example callback for temperature attribute change
+esp_err_t temperature_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
+{
+    esp_err_t err = ESP_OK;
+
+    printf(" ========  temperature_attribute_update_cb - Type: %d  ======== \n", type);
+
+    if (type == POST_UPDATE)
+    {
+        ESP_LOGI(TAG, "Temperature attribute updated to %d", val->val.i16);
+        // Add your logic here to use or display the temperature value
+        printf(" ========  Temperature value: %d\n", val->val.i16);
+    }
+
+    return err;
+}
 
 // // Example callback for humidity attribute change
-// esp_err_t humidity_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
-// {
-//     if (type == POST_UPDATE)
-//     {
-//         ESP_LOGI(TAG, "Humidity attribute updated to %u", val->u16);
-//         // Add your logic here to use or display the humidity value
-//     }
-//     return ESP_OK;
-// }
+esp_err_t humidity_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
+{
+    if (type == POST_UPDATE)
+    {
+        ESP_LOGI(TAG, "Humidity attribute updated to %d", val->val.i16);
+        // Add your logic here to use or display the humidity value
+        printf(" ========  Temperature value: %d\n", val->val.i16);
+    }
+    return ESP_OK;
+}
 
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 {
@@ -178,12 +203,15 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type, uint16
 {
     esp_err_t err = ESP_OK;
 
-    // if (type == PRE_UPDATE)
-    // {
-    //     /* Driver update */
-    //     app_driver_handle_t driver_handle = (app_driver_handle_t)priv_data;
-    //     err = app_driver_attribute_update(driver_handle, endpoint_id, cluster_id, attribute_id, val);
-    // }
+    printf(" ========  app_attribute_update_cb  ======== \n");
+
+    if (type == POST_UPDATE) // or READ?
+    {
+        printf(" ========  app_attribute_update_cb = POST_UPDATE ======== \n");
+
+        app_driver_handle_t driver_handle = (app_driver_handle_t)priv_data;
+        err = app_driver_attribute_update(driver_handle, endpoint_id, cluster_id, attribute_id, val);
+    }
 
     return err;
 }
@@ -213,10 +241,6 @@ extern "C" void app_main()
         // temperature_measurement_config.measured_value = DEFAULT_TEMPERATURE_VALUE;
         // cluster_t *cluster = cluster::temperature_measurement::create(node, &temperature_measurement_config, CLUSTER_FLAG_SERVER);
 
-        // An example from Espressif
-        // esp_matter::endpoint::temperature_sensor::config_t temperature_sensor_config;
-        // endpoint = esp_matter::endpoint::temperature_sensor::create(node, &temperature_sensor_config, ENDPOINT_FLAG_NONE, NULL);
-
         // Create endpoint with temperature measurement
         temperature_sensor::config_t temperature_sensor_config;
         temperature_sensor_config.temperature_measurement.measured_value = DEFAULT_TEMPERATURE_VALUE;
@@ -230,7 +254,13 @@ extern "C" void app_main()
             ESP_LOGI(TAG, "Temperature endpoint created with endpoint_id %d", temperature_sensor_endpoint_id);
 
             // // Register temperature attribute callback
+            esp_matter::attribute::set_callback(temperature_attribute_update_cb);
             // esp_matter::attribute::register_update_callback(temperature_sensor_endpoint_id, chip::app::Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Id, temperature_attribute_update_cb, nullptr);
+
+            // esp_matter_attr_val_t temperature_value;
+            // temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
+            // printf(" ========  Temperature value: %d\n", temperature_value.val.i16);
+            // esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
         }
 
         //////////////
@@ -254,7 +284,7 @@ extern "C" void app_main()
             ESP_LOGI(TAG, "Humidity endpoint created with endpoint_id %d", humidity_sensor_endpoint_id);
 
             // // Register humidity attribute callback
-            // esp_matter::attribute::register_update_callback(humidity_sensor_endpoint_id, chip::app::Clusters::RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, humidity_attribute_update_cb, nullptr);
+            esp_matter::attribute::set_callback(humidity_attribute_update_cb);
         }
 
         ////

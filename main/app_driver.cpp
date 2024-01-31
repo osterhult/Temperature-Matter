@@ -12,7 +12,7 @@
 
 #include <device.h>
 #include <driver/gpio.h>
-// #include <esp_matter.h>
+#include <esp_matter.h>
 #include <cstdint>
 #include <cmath>
 
@@ -37,20 +37,25 @@ extern uint16_t humidity_sensor_endpoint_id;
 
 static void app_driver_button_toggle_cb(void *arg, void *data)
 {
+    // TODO: Change this to measure temperature and humidity when button is pressed
+
     ESP_LOGI(TAG, "Toggle button pressed");
-    uint16_t endpoint_id = temperature_sensor_endpoint_id;
-    uint32_t cluster_id = OnOff::Id;
-    uint32_t attribute_id = OnOff::Attributes::OnOff::Id;
 
-    node_t *node = node::get();
-    endpoint_t *endpoint = endpoint::get(node, endpoint_id);
-    cluster_t *cluster = cluster::get(endpoint, cluster_id);
-    attribute_t *attribute = attribute::get(cluster, attribute_id);
+    esp_matter_attr_val_t temperature_value;
+    temperature_value = esp_matter_invalid(NULL);
+    temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
+    temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
+    esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
 
-    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-    attribute::get_val(attribute, &val);
-    val.val.b = !val.val.b;
-    attribute::update(endpoint_id, cluster_id, attribute_id, &val);
+    printf("===== Button toggle - Read Temperature value: %d ==== \n", temperature_value.val.i16);
+
+    esp_matter_attr_val_t humidity_value;
+    humidity_value = esp_matter_invalid(NULL);
+    humidity_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
+    humidity_value.val.u16 = app_driver_read_humidity(humidity_sensor_endpoint_id);
+    esp_matter::attribute::update(humidity_sensor_endpoint_id, RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidity_value);
+
+    printf("===== Button toggle - Read Humidity value: %d ==== \n", humidity_value.val.u16);
 }
 
 /**
@@ -61,6 +66,7 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
 {
 
     ESP_LOGI(TAG, "===== Update Temp sensor driver attributes ==== \n endpoint ID: %u, Cluster ID: %lu, Attribute ID: %lu \n", endpoint_id, cluster_id, attribute_id);
+    printf("===== Update Temp sensor driver attributes ==== \n endpoint ID: %u, Cluster ID: %lu, Attribute ID: %lu \n", endpoint_id, cluster_id, attribute_id);
 
     esp_err_t err = ESP_OK;
     if (endpoint_id == temperature_sensor_endpoint_id)
@@ -70,51 +76,47 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
         ESP_LOGI(TAG, "===== Read and set Temperature value ==== \n");
         err = app_driver_read_temperature(endpoint_id);
 
-        // led_driver_handle_t handle = (led_driver_handle_t)driver_handle;
-        // if (cluster_id == OnOff::Id)
-        // {
-        //     if (attribute_id == OnOff::Attributes::OnOff::Id)
-        //     {
-        //         ESP_LOGI(TAG, "===== Update Power control ==== \n");
-        //         err = app_driver_light_set_power(handle, val);
-        //     }
-        // }
-        // else if (cluster_id == LevelControl::Id)
-        // {
-        //     if (attribute_id == LevelControl::Attributes::CurrentLevel::Id)
-        //     {
-        //         ESP_LOGI(TAG, "===== Update Level control ==== \n");
-        //         err = app_driver_rgb_set_brightness(handle, val);
-        //     }
-        // }
-        // else if (cluster_id == ColorControl::Id)
-        // {
-        //     ESP_LOGI(TAG, "===== Update Color control ==== \n");
+        node_t *node = node::get();
+        endpoint_t *endpoint = endpoint::get(node, endpoint_id);
+        cluster_t *cluster = cluster::get(endpoint, cluster_id);
+        attribute_t *attribute = attribute::get(cluster, attribute_id);
 
-        //     if (attribute_id == ColorControl::Attributes::CurrentHue::Id)
-        //     {
-        //         ESP_LOGI(TAG, "===== Update Hue control ==== \n");
-        //         err = app_driver_rgb_set_hue(handle, val);
-        //     }
-        //     else if (attribute_id == ColorControl::Attributes::CurrentSaturation::Id)
-        //     {
-        //         ESP_LOGI(TAG, "===== Update Saturation control ==== \n");
-        //         err = app_driver_light_set_saturation(handle, val);
-        //     }
-        //     else if (attribute_id == ColorControl::Attributes::ColorTemperatureMireds::Id)
-        //     {
-        //         ESP_LOGI(TAG, "===== Update Temperature control ==== \n");
-        //         // ESP_LOGI(TAG, "===== Update Temperature control ==== \nVal: %d", val->val.i);
-        //         err = app_driver_rgb_set_temperature(handle, val);
-        //     }
-        // }
+        esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+        attribute::get_val(attribute, &val);
+        val.val.b = !val.val.b;
+        attribute::update(endpoint_id, cluster_id, attribute_id, &val);
     }
+    else if (endpoint_id == humidity_sensor_endpoint_id)
+    {
+        ESP_LOGI(TAG, "===== Inside Update Humidity function #2 ==== \n");
+
+        ESP_LOGI(TAG, "===== Read and set Humidity value ==== \n");
+        err = app_driver_read_humidity(endpoint_id);
+
+        node_t *node = node::get();
+        endpoint_t *endpoint = endpoint::get(node, endpoint_id);
+        cluster_t *cluster = cluster::get(endpoint, cluster_id);
+        attribute_t *attribute = attribute::get(cluster, attribute_id);
+
+        esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+        attribute::get_val(attribute, &val);
+        val.val.b = !val.val.b;
+        attribute::update(endpoint_id, cluster_id, attribute_id, &val);
+    }
+    else
+    {
+        ESP_LOGI(TAG, "===== Inside Update function #3 ==== \n");
+        err = ESP_ERR_NOT_SUPPORTED;
+    }
+
     return err;
 }
 
 int16_t app_driver_read_temperature(uint16_t endpoint_id)
 {
-    return (u_int16_t)getTemperature();
+    int16_t temp = getTemperature();
+    printf("===== Read Temperature value: %d ==== \n", temp);
+    return temp;
 }
 
 uint16_t app_driver_read_humidity(uint16_t endpoint_id)
@@ -129,15 +131,6 @@ app_driver_handle_t app_driver_DHT_sensor_init()
 {
     // Start DHT22 sensor task
     DHT22_task_start();
-
-    // gpio_config_t io_conf = {
-    //     .pin_bit_mask = (1ULL << DHT22_GPIO_PIN),
-    //     .mode = GPIO_MODE_OUTPUT,
-    //     .pull_up_en = GPIO_PULLUP_DISABLE,
-    //     .pull_down_en = GPIO_PULLDOWN_DISABLE,
-    //     .intr_type = GPIO_INTR_DISABLE,
-    // };
-    // gpio_config(&io_conf);
 
     // Return a placeholder value (you may need to adapt the return type)
     return (app_driver_handle_t)1;

@@ -35,9 +35,9 @@ void DHT22_task_start(void);
 
 // == function prototypes =======================================
 
-void setDHTgpio(int gpio);
 void errorHandler(int response);
-int readDHT();
+// void setDHTgpio(int gpio);
+// int readDHT();
 float getHumidity();
 float getTemperature();
 int getSignalLevel(int usTimeOut, bool state);
