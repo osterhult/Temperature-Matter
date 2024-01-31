@@ -334,33 +334,33 @@ esp_err_t dht_read_float_data()
     return ESP_OK;
 }
 
-/**
- * DHT22 Sensor task
- */
-static void DHT22_task(void *pvParameter)
-{
-    // setDHTgpio(DHT_GPIO);
-    printf("Starting DHT task\n\n");
+// /**
+//  * DHT22 Sensor task
+//  */
+// static void DHT22_task(void *pvParameter)
+// {
+//     // setDHTgpio(DHT_GPIO);
+//     printf("Starting DHT task\n\n");
 
-    for (;;)
-    {
-        printf("=== Reading DHT ===\n");
-        int ret = dht_read_float_data();
+//     for (;;)
+//     {
+//         printf("=== Reading DHT ===\n");
+//         int ret = dht_read_float_data();
 
-        errorHandler(ret);
+//         errorHandler(ret);
 
-        printf("Hum %.1f\n", getHumidity());
-        printf("Tmp %.1f\n", getTemperature());
+//         printf("Hum %.1f\n", getHumidity());
+//         printf("Tmp %.1f\n", getTemperature());
 
-        // Wait at least 30 seconds before reading again
-        // The interval of the whole process must be more than 30 seconds
-        vTaskDelay(30000 / portTICK_PERIOD_MS);
-    }
-}
+//         // Wait at least 30 seconds before reading again
+//         // The interval of the whole process must be more than 30 seconds
+//         vTaskDelay(30000 / portTICK_PERIOD_MS);
+//     }
+// }
 
-void DHT22_task_start(void)
-{
-    xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
-}
+// void DHT22_task_start(void)
+// {
+//     xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
+// }
 
 ////////////////////////////// END OF DHT22 CODE //////////////////////////////

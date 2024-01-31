@@ -61,59 +61,34 @@ static const char *s_decryption_key = decryption_key_start;
 static const uint16_t s_decryption_key_len = decryption_key_end - decryption_key_start;
 #endif // CONFIG_ENABLE_ENCRYPTED_OTA
 
-// Timer handle
-TimerHandle_t sensor_timer;
+// // Timer handle
+// TimerHandle_t sensor_timer;
 
-// Timer callback function
-void sensor_timer_callback(TimerHandle_t xTimer)
-{
-    printf(" ========  sensor_timer_callback  ======== \n");
+// // Timer callback function
+// void sensor_timer_callback(TimerHandle_t xTimer)
+// {
+//     printf(" ========  sensor_timer_callback  ======== \n");
 
-    // Read temperature and humidity values from the sensor
-    int16_t temperature = app_driver_read_temperature(temperature_sensor_endpoint_id);
-    uint16_t humidity = app_driver_read_humidity(humidity_sensor_endpoint_id);
+//     // Read temperature and humidity values from the sensor
+//     int16_t temperature = app_driver_read_temperature(temperature_sensor_endpoint_id);
+//     uint16_t humidity = app_driver_read_humidity(humidity_sensor_endpoint_id);
 
-    // Update temperature attribute
-    esp_matter_attr_val_t temperature_value;
-    temperature_value.val.i16 = temperature;
-    esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
+//     // Update temperature attribute
+//     esp_matter_attr_val_t temperature_value;
+//     temperature_value = esp_matter_invalid(NULL);
+//     temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
+//     temperature_value.val.i16 = temperature;
+//     esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
 
-    // // Update humidity attribute
-    // esp_matter_attr_val_t humidity_value;
-    // humidity_value.val.u16 = humidity;
-    // esp_matter::attribute::update(humidity_sensor_endpoint_id, sTemperatureDelegate::Attributes::MeasuredValue::Id, &humidity_value);
+//     // Update humidity attribute
+//     esp_matter_attr_val_t humidity_value;
+//     humidity_value = esp_matter_invalid(NULL);
+//     humidity_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
+//     humidity_value.val.u16 = humidity;
+//     esp_matter::attribute::update(humidity_sensor_endpoint_id, RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidity_value);
 
-    ESP_LOGI(TAG, "Temperature: %d, Humidity: %u", temperature, humidity);
-}
-
-// Example callback for temperature attribute change
-esp_err_t temperature_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
-{
-    esp_err_t err = ESP_OK;
-
-    printf(" ========  temperature_attribute_update_cb - Type: %d  ======== \n", type);
-
-    if (type == POST_UPDATE)
-    {
-        ESP_LOGI(TAG, "Temperature attribute updated to %d", val->val.i16);
-        // Add your logic here to use or display the temperature value
-        printf(" ========  Temperature value: %d\n", val->val.i16);
-    }
-
-    return err;
-}
-
-// // Example callback for humidity attribute change
-esp_err_t humidity_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
-{
-    if (type == POST_UPDATE)
-    {
-        ESP_LOGI(TAG, "Humidity attribute updated to %d", val->val.i16);
-        // Add your logic here to use or display the humidity value
-        printf(" ========  Temperature value: %d\n", val->val.i16);
-    }
-    return ESP_OK;
-}
+//     ESP_LOGI(TAG, "Temperature: %d, Humidity: %u", temperature, humidity);
+// }
 
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 {
@@ -293,6 +268,13 @@ extern "C" void app_main()
         if (!node || !temperature_sensor_endpoint || !humidity_sensor_endpoint)
         {
             ESP_LOGE(TAG, "Matter node creation failed");
+        }
+        else
+        {
+            // // Create and start the sensor timer
+            // printf(" ========  Create and start the sensor timer  ======== \n");
+            // sensor_timer = xTimerCreate("sensor_timer", pdMS_TO_TICKS(10000), pdTRUE, NULL, sensor_timer_callback);
+            // xTimerStart(sensor_timer, 0);
         }
     }
 
