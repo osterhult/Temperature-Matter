@@ -1,11 +1,8 @@
-/*
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+/**
+ * Matter Temperature and Humidity Sensor Example using ESP32 and DHT22
+ */
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
+/* Includes */
 #include <esp_err.h>
 #include <esp_log.h>
 #include <nvs_flash.h>
@@ -40,18 +37,17 @@
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/Server.h>
 
+/* Constants */
 static const char *TAG = "app_main";
 uint16_t temperature_sensor_endpoint_id = 0;
 uint16_t humidity_sensor_endpoint_id = 0;
+constexpr auto k_timeout_seconds = 300;
 
+/* Namespaces */
 using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
-
-// namespace sTempMeasurement = esp_matter::cluster::temperature_measurement;
-
-constexpr auto k_timeout_seconds = 300;
 
 #if CONFIG_ENABLE_ENCRYPTED_OTA
 extern const char decryption_key_start[] asm("_binary_esp_image_encryption_key_pem_start");
@@ -61,6 +57,9 @@ static const char *s_decryption_key = decryption_key_start;
 static const uint16_t s_decryption_key_len = decryption_key_end - decryption_key_start;
 #endif // CONFIG_ENABLE_ENCRYPTED_OTA
 
+/**
+ * Handling Matter events
+ */
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 {
     switch (event->Type)
@@ -151,13 +150,16 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type, uint16
 
     printf(" ========  app_attribute_update_cb  ======== \n");
 
-    if (type == POST_UPDATE) // or READ?
-    {
-    }
+    // if (type == POST_UPDATE) // or READ?
+    // {
+    // }
 
     return err;
 }
 
+/**
+ * Main function that initializes Matter
+ */
 extern "C" void app_main()
 {
     esp_err_t err = ESP_OK;
@@ -177,12 +179,6 @@ extern "C" void app_main()
 
     if (node)
     {
-
-        // // Create cluster with temperature measurement
-        // cluster::temperature_measurement::config_t temperature_measurement_config;
-        // temperature_measurement_config.measured_value = DEFAULT_TEMPERATURE_VALUE;
-        // cluster_t *cluster = cluster::temperature_measurement::create(node, &temperature_measurement_config, CLUSTER_FLAG_SERVER);
-
         // Create endpoint with temperature measurement
         temperature_sensor::config_t temperature_sensor_config;
         temperature_sensor_config.temperature_measurement.measured_value = DEFAULT_TEMPERATURE_VALUE;
@@ -196,16 +192,9 @@ extern "C" void app_main()
             ESP_LOGI(TAG, "Temperature endpoint created with endpoint_id %d", temperature_sensor_endpoint_id);
 
             // // Register temperature attribute callback
-            esp_matter::attribute::set_callback(temperature_attribute_update_cb);
-            // esp_matter::attribute::register_update_callback(temperature_sensor_endpoint_id, chip::app::Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Id, temperature_attribute_update_cb, nullptr);
+            // esp_matter::attribute::set_callback(temperature_attribute_update_cb);
+            esp_matter::attribute::set_callback(sensor_attribute_update_cb);
         }
-
-        //////////////
-
-        // // Create cluster with humidity measurement
-        // cluster::relative_humidity_measurement::config_t relative_humidity_measurement_config;
-        // relative_humidity_measurement_config.measured_value = DEFAULT_TEMPERATURE_VALUE;
-        // cluster_t *cluster = cluster::relative_humidity_measurement::create(node, &relative_humidity_measurement_config, CLUSTER_FLAG_SERVER);
 
         // Create endpoint with humidity measurement
         humidity_sensor::config_t humidity_sensor_config;
@@ -220,7 +209,8 @@ extern "C" void app_main()
             ESP_LOGI(TAG, "Humidity endpoint created with endpoint_id %d", humidity_sensor_endpoint_id);
 
             // // Register humidity attribute callback
-            esp_matter::attribute::set_callback(humidity_attribute_update_cb);
+            // esp_matter::attribute::set_callback(humidity_attribute_update_cb);
+            esp_matter::attribute::set_callback(sensor_attribute_update_cb);
         }
 
         /* These node and endpoint handles can be used to create/add other endpoints and clusters. */

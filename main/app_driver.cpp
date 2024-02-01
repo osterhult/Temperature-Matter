@@ -1,11 +1,10 @@
 /*
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+ * app_driver.cpp
+ *
+ *  Created on: 2021. 4. 1.
+ */
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
+/* Includes ------------------------------------------------------------------*/
 #include <esp_log.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +23,7 @@
 #include <esp_matter.h>
 #include <DHT22X.h>
 
+/* Constants -----------------------------------------------------------------*/
 using namespace chip::app::Clusters;
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -67,7 +67,6 @@ static void app_driver_button_toggle_cb(void *arg, void *data)
 int16_t app_driver_read_temperature(uint16_t endpoint_id)
 {
     int16_t temp = getTemperature();
-    printf("===== Read Temperature value: %d ==== \n", temp);
     return temp;
 }
 
@@ -81,13 +80,10 @@ esp_err_t temperature_attribute_update_cb(attribute::callback_type_t type, uint1
 {
     esp_err_t err = ESP_OK;
 
-    printf(" ========  temperature_attribute_update_cb - Type: %d  ======== \n", type);
-
     if (type == POST_UPDATE)
     {
         ESP_LOGI(TAG, "Temperature attribute updated to %d", val->val.i16);
         // Add your logic here to use or display the temperature value
-        printf(" ========  Temperature value: %d\n", val->val.i16);
     }
 
     return err;
@@ -100,7 +96,26 @@ esp_err_t humidity_attribute_update_cb(attribute::callback_type_t type, uint16_t
     {
         ESP_LOGI(TAG, "Humidity attribute updated to %d", val->val.i16);
         // Add your logic here to use or display the humidity value
-        printf(" ========  Temperature value: %d\n", val->val.i16);
+    }
+    return ESP_OK;
+}
+
+esp_err_t sensor_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
+{
+    // if (type == POST_UPDATE)
+    if (type == PRE_UPDATE)
+    {
+        if (cluster_id == TemperatureMeasurement::Id)
+        {
+            ESP_LOGI(TAG, "Temperature attribute updated to %d", val->val.i16);
+        }
+        else if (cluster_id == RelativeHumidityMeasurement::Id)
+        {
+            ESP_LOGI(TAG, "Humidity attribute updated to %d", val->val.i16);
+        }
+
+        // Add your logic here to use or display the humidity value
+        // updateMatterWithValues(); // gives kerlnel panic :(
     }
     return ESP_OK;
 }
@@ -120,8 +135,8 @@ static void DHT22_task(void *pvParameter)
 
         errorHandler(ret);
 
-        printf("Hum %.1f\n", getHumidity());
-        printf("Tmp %.1f\n", getTemperature());
+        // printf("Hum %.1f\n", getHumidity());
+        // printf("Tmp %.1f\n", getTemperature());
 
         // TODO: Update Matter values
         updateMatterWithValues();

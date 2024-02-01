@@ -15,5 +15,12 @@ No additional setup is required.
 ## 3. DHT22 driver
 Found two different open-source projects on GitHub that none of them worked properly so I mashed them to one that works in this case. Hence the X in the file titles.
 
+## 4. TODO:s or current issues
+Currently I get the measured value when using CHIP-TOOL
 
+**$ ./chip-tool temperaturemeasurement read measured-value [NODE-ID] 1**
+
+**$ ./chip-tool relativehumiditymeasurement read measured-value [NODE-ID] 2**
+
+Although the code doesn't update the values in HomeKit or GoogleHome yet. That is an current issue.
 

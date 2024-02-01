@@ -1,8 +1,6 @@
 
 ////////////////////////////// DHT22 CODE //////////////////////////////
 
-//////////////////////////////////
-
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 
 #include <stdio.h>
@@ -95,8 +93,6 @@ int getSignalLevel(int usTimeOut, bool state)
     }
     return uSec;
 }
-
-// == DHT22 driver ===============================================
 
 /**
  * Read data from DHT22 sensor
@@ -265,45 +261,29 @@ static inline esp_err_t dht_fetch_data(uint8_t data[DHT_DATA_BYTES])
 
 esp_err_t dht_read_data()
 {
-    // printf("==== dht_read_data #1 ====\n");
     uint8_t data[DHT_DATA_BYTES] = {0};
 
-    // printf("==== dht_read_data #2 ====\n");
     gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT_OD);
-
-    // printf("==== dht_read_data #3 ====\n");
     gpio_set_level(DHT_GPIO, 1);
 
-    // printf("==== dht_read_data #4 ====\n");
-    // PORT_ENTER_CRITICAL();
-
-    // Når inte hit... smäller ovanför
-    // printf("==== dht_read_data #5 ====\n");
-
     esp_err_t result = dht_fetch_data(data);
-    // printf("==== dht_read_data #6 ====\n");
 
     if (result == ESP_OK)
     {
-        printf("==== dht_read_data == fetch_data = EPS_OK ====\n");
         // PORT_EXIT_CRITICAL();
     }
 
     /* restore GPIO direction because, after calling dht_fetch_data(), the
      * GPIO direction mode changes */
     gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT_OD);
-    // printf("==== dht_read_data #8 ====\n");
 
     gpio_set_level(DHT_GPIO, 1);
-    // printf("==== dht_read_data #9 ====\n");
 
     if (result != ESP_OK)
     {
         printf("==== dht_read_data - ESP_NOT_OK ====\n");
         return result;
     }
-
-    printf("==== dht_read_data  ====\ndata[0]: %d, data[1]: %d, data[2]: %d, data[3]: %d,  data[4]: %d, \n", data[0], data[1], data[2], data[3], data[4]);
 
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF))
     {
@@ -333,34 +313,5 @@ esp_err_t dht_read_float_data()
 
     return ESP_OK;
 }
-
-// /**
-//  * DHT22 Sensor task
-//  */
-// static void DHT22_task(void *pvParameter)
-// {
-//     // setDHTgpio(DHT_GPIO);
-//     printf("Starting DHT task\n\n");
-
-//     for (;;)
-//     {
-//         printf("=== Reading DHT ===\n");
-//         int ret = dht_read_float_data();
-
-//         errorHandler(ret);
-
-//         printf("Hum %.1f\n", getHumidity());
-//         printf("Tmp %.1f\n", getTemperature());
-
-//         // Wait at least 30 seconds before reading again
-//         // The interval of the whole process must be more than 30 seconds
-//         vTaskDelay(30000 / portTICK_PERIOD_MS);
-//     }
-// }
-
-// void DHT22_task_start(void)
-// {
-//     xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
-// }
 
 ////////////////////////////// END OF DHT22 CODE //////////////////////////////
