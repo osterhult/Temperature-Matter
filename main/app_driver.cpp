@@ -41,8 +41,8 @@ void updateMatterWithValues()
     // Update temperature values
     esp_matter_attr_val_t temperature_value;
     temperature_value = esp_matter_invalid(NULL);
-    temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
-    temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
+    temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
+    temperature_value.val.u16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
     esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
 
     // Update humidity values
@@ -64,10 +64,9 @@ static void app_driver_button_toggle_cb(void *arg, void *data)
     updateMatterWithValues();
 }
 
-int16_t app_driver_read_temperature(uint16_t endpoint_id)
+uint16_t app_driver_read_temperature(uint16_t endpoint_id)
 {
-    int16_t temp = getTemperature();
-    return temp;
+    return (u_int16_t)getTemperature();
 }
 
 uint16_t app_driver_read_humidity(uint16_t endpoint_id)

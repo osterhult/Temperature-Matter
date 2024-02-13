@@ -94,65 +94,68 @@ int getSignalLevel(int usTimeOut, bool state)
     return uSec;
 }
 
-/**
- * Read data from DHT22 sensor
- * @return DHT_OK if successful, otherwise error code
- */
-int readDHTData()
-{
-    // Initialize GPIO pin
+// /**
+//  * Read data from DHT22 sensor
+//  * @return DHT_OK if successful, otherwise error code
+//  */
+// int readDHTData()
+// {
+//     // Initialize GPIO pin
 
-    esp_rom_gpio_pad_select_gpio(DHT_GPIO);
+//     esp_rom_gpio_pad_select_gpio(DHT_GPIO);
 
-    gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT);
-    gpio_set_level(DHT_GPIO, 1);
-    esp_rom_delay_us(250000); // Wait for sensor to stabilize
+//     gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT);
+//     gpio_set_level(DHT_GPIO, 1);
+//     esp_rom_delay_us(250000); // Wait for sensor to stabilize
 
-    // Send start signal
-    gpio_set_level(DHT_GPIO, 0);
-    esp_rom_delay_us(20000);
-    gpio_set_level(DHT_GPIO, 1);
-    gpio_set_direction(DHT_GPIO, GPIO_MODE_INPUT);
+//     // Send start signal
+//     gpio_set_level(DHT_GPIO, 0);
+//     esp_rom_delay_us(20000);
+//     gpio_set_level(DHT_GPIO, 1);
+//     gpio_set_direction(DHT_GPIO, GPIO_MODE_INPUT);
 
-    // Wait for response
-    int uSec = getSignalLevel(85, 0);
-    if (uSec == -1)
-    {
-        return DHT_TIMEOUT_ERROR;
-    }
+//     // Wait for response
+//     int uSec = getSignalLevel(85, 0);
+//     if (uSec == -1)
+//     {
+//         return DHT_TIMEOUT_ERROR;
+//     }
 
-    // Read data bits
-    uint8_t data[DHT_DATA_BYTES] = {0};
-    for (int i = 0; i < DHT_DATA_BITS; i++)
-    {
-        uSec = getSignalLevel(70, 1);
-        if (uSec == -1)
-        {
-            return DHT_TIMEOUT_ERROR;
-        }
-        data[i / 8] <<= 1;
-        if (uSec > 40)
-        {
-            data[i / 8] |= 1;
-        }
-    }
+//     // Read data bits
+//     uint8_t data[DHT_DATA_BYTES] = {0};
+//     for (int i = 0; i < DHT_DATA_BITS; i++)
+//     {
+//         uSec = getSignalLevel(70, 1);
+//         if (uSec == -1)
+//         {
+//             return DHT_TIMEOUT_ERROR;
+//         }
+//         data[i / 8] <<= 1;
+//         if (uSec > 40)
+//         {
+//             data[i / 8] |= 1;
+//         }
+//     }
 
-    // Verify checksum
-    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF))
-    {
-        return DHT_CHECKSUM_ERROR;
-    }
+//     // Verify checksum
+//     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF))
+//     {
+//         return DHT_CHECKSUM_ERROR;
+//     }
 
-    // Convert data to temperature and humidity
-    humidity = ((data[0] << 8) + data[1]) / 10.0;
-    temperature = (((data[2] & 0x7F) << 8) + data[3]) / 10.0;
-    if (data[2] & 0x80)
-    {
-        temperature *= -1;
-    }
+//     // Convert data to temperature and humidity
+//     humidity = ((data[0] << 8) + data[1]) / 10.0;
+//     temperature = (((data[2] & 0x7F) << 8) + data[3]) / 10.0;
 
-    return DHT_OK;
-}
+//     printf("==== DHX 22 - Humidity: %.1f%%, Temperature: %.1f°C\n", humidity, temperature);
+
+//     if (data[2] & 0x80)
+//     {
+//         temperature *= -1;
+//     }
+
+//     return DHT_OK;
+// }
 
 ///////////////////////////////////////////////
 /**
@@ -302,7 +305,7 @@ esp_err_t dht_read_data()
 
 esp_err_t dht_read_float_data()
 {
-    int16_t i_humidity, i_temp;
+    // uint16_t i_humidity, i_temp;
 
     esp_err_t res = dht_read_data();
 
