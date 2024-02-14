@@ -41,8 +41,8 @@ void updateMatterWithValues()
     // Update temperature values
     esp_matter_attr_val_t temperature_value;
     temperature_value = esp_matter_invalid(NULL);
-    temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_UINT16;
-    temperature_value.val.u16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
+    temperature_value.type = esp_matter_val_type_t::ESP_MATTER_VAL_TYPE_INT16;
+    temperature_value.val.i16 = app_driver_read_temperature(temperature_sensor_endpoint_id);
     esp_matter::attribute::update(temperature_sensor_endpoint_id, TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperature_value);
 
     // Update humidity values
@@ -64,14 +64,14 @@ static void app_driver_button_toggle_cb(void *arg, void *data)
     updateMatterWithValues();
 }
 
-uint16_t app_driver_read_temperature(uint16_t endpoint_id)
+int16_t app_driver_read_temperature(uint16_t endpoint_id)
 {
-    return (u_int16_t)getTemperature();
+    return (u_int16_t)getTemperature() * 100;
 }
 
 uint16_t app_driver_read_humidity(uint16_t endpoint_id)
 {
-    return (u_int16_t)getHumidity();
+    return (u_int16_t)getHumidity() * 100;
 }
 
 // Example callback for temperature attribute change
@@ -112,9 +112,6 @@ esp_err_t sensor_attribute_update_cb(attribute::callback_type_t type, uint16_t e
         {
             ESP_LOGI(TAG, "Humidity attribute updated to %d", val->val.i16);
         }
-
-        // Add your logic here to use or display the humidity value
-        // updateMatterWithValues(); // gives kerlnel panic :(
     }
     return ESP_OK;
 }
@@ -134,10 +131,7 @@ static void DHT22_task(void *pvParameter)
 
         errorHandler(ret);
 
-        // printf("Hum %.1f\n", getHumidity());
-        // printf("Tmp %.1f\n", getTemperature());
-
-        // TODO: Update Matter values
+        // Update Matter values
         updateMatterWithValues();
 
         // Wait at least 30 seconds before reading again
