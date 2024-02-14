@@ -148,7 +148,7 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type, uint16
 {
     esp_err_t err = ESP_OK;
 
-    printf(" ========  app_attribute_update_cb  ======== \n");
+    ESP_LOGI(TAG, " ========  app_attribute_update_cb  ======== \n");
 
     // if (type == POST_UPDATE) // or READ?
     // {

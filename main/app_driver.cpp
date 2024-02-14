@@ -122,11 +122,11 @@ esp_err_t sensor_attribute_update_cb(attribute::callback_type_t type, uint16_t e
 static void DHT22_task(void *pvParameter)
 {
     // setDHTgpio(DHT_GPIO);
-    printf("Starting DHT task\n\n");
+    ESP_LOGI(TAG, "Starting DHT task\n\n");
 
     for (;;)
     {
-        printf("=== Reading DHT ===\n");
+        ESP_LOGI(TAG, "=== Reading DHT ===\n");
         int ret = dht_read_float_data();
 
         errorHandler(ret);
