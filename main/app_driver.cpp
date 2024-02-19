@@ -15,13 +15,14 @@
 #include <cmath>
 
 #include <app_priv.h>
+#include <core/CHIPBuildConfig.h> // Add this line
 
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #include <esp_matter.h>
-#include <DHT22X.h>
+#include <DHT22.h>
 
 /* Constants -----------------------------------------------------------------*/
 using namespace chip::app::Clusters;
@@ -32,6 +33,40 @@ using namespace esp_matter::endpoint;
 static const char *TAG = "app_driver";
 extern uint16_t temperature_sensor_endpoint_id;
 extern uint16_t humidity_sensor_endpoint_id;
+
+// DHT22 Sensor Task
+#define DHT22_TASK_STACK_SIZE 4096
+#define DHT22_TASK_PRIORITY 4
+#define DHT22_TASK_CORE_ID 1
+
+// Placeholders for the values
+float temperature;
+float humidity;
+
+/**
+ * Error handler
+ * @param response
+ */
+void errorHandler(int response)
+{
+    switch (response)
+    {
+
+    case -2: // DHT_TIMEOUT_ERROR
+        printf("Sensor Timeout\n");
+        break;
+
+    case -1: // DHT_CHECKSUM_ERROR
+        printf("CheckSum error\n");
+        break;
+
+    case 0: // DHT_OK
+        break;
+
+    default:
+        printf("Unknown error: %d \n", response);
+    }
+}
 
 /**
  * Update Matter values with temperature and humidity
@@ -66,12 +101,14 @@ static void app_driver_button_toggle_cb(void *arg, void *data)
 
 int16_t app_driver_read_temperature(uint16_t endpoint_id)
 {
-    return (u_int16_t)getTemperature() * 100;
+    return (u_int16_t)temperature * 100;
+    // return (u_int16_t)getTemperature() * 100;
 }
 
 uint16_t app_driver_read_humidity(uint16_t endpoint_id)
 {
-    return (u_int16_t)getHumidity() * 100;
+    return (u_int16_t)humidity * 100;
+    // return (u_int16_t)getHumidity() * 100;
 }
 
 // Example callback for temperature attribute change
@@ -127,9 +164,15 @@ static void DHT22_task(void *pvParameter)
     for (;;)
     {
         ESP_LOGI(TAG, "=== Reading DHT ===\n");
-        int ret = dht_read_float_data();
 
-        errorHandler(ret);
+        // Read DHT22 sensor
+        // int ret = dht_read_float_data(DHT_TYPE_AM2301, DHT22_GPIO_PIN, &humidity, &temperature);
+        // errorHandler(ret);
+
+        setDHTgpio(DHT22_GPIO_PIN);
+        readDHT();
+        humidity = getHumidity();
+        temperature = getTemperature();
 
         // Update Matter values
         updateMatterWithValues();
